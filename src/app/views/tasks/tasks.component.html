@@ -2,38 +2,69 @@
   <div class="card-header card-header-warning">
     <h4 class="card-title">Список задач</h4>
   </div>
-  <div class="card-body table-responsive">
-    <table class="table table-hover">
-      <thead class="text-warning">
-      <th>#</th>
-      <th>Название</th>
-      <th>Категория</th>
-      <th>Приоритет</th>
-      <th>Дата</th>
-      <th>Статус</th>
-      </thead>
-      <tbody>
-      <tr *ngFor="let task of tasks; let i = index;" [class.completed]="task.completed">
-        <td>{{i + 1}}</td>
-        <td>{{task.title}}</td>
-        <td [class.novalue]="task.category == null">{{task.category ? task.category.title : 'Без категории'}}</td>
-        <td [class.novalue]="task.priority == null">{{task.priority ? task.priority.title : 'Без приоритета'}}</td>
-        <td [class.novalue]="task.date == null">{{task.date != null ? (task.date | date: 'medium') : 'Без даты'}}</td>
-        <td>
-          <div class="form-check">
-            <label class="form-check-label">
-              <input (click)="toggleTaskCompleted(task)" [checked]="task.completed" class="form-check-input"
-                     type="checkbox"
-                     value=""
-              >
-              <span class="form-check-sign">
-                <span class="check"></span>
-              </span>
-            </label>
-          </div>
+  <div *ngIf="tasks.length > 0" class="card-body table-responsive">
+
+    <table [dataSource]="dataSource" mat-table matSort>
+      <!--      цвет приоритета-->
+      <ng-container matColumnDef="color">
+        <th *matHeaderCellDef mat-header-cell></th>
+        <td *matCellDef="let task" [style.background-color]="getPriorityColor(task)" class="col-color" mat-cell></td>
+      </ng-container>
+
+      <!--      нумерация-->
+      <ng-container matColumnDef="id">
+        <th *matHeaderCellDef mat-header-cell></th>
+        <td *matCellDef="let index = index;" class="col-id" mat-cell>
+          {{index + 1}}
         </td>
-      </tr>
-      </tbody>
+      </ng-container>
+
+      <!--      название задачи-->
+      <ng-container matColumnDef="title">
+        <th *matHeaderCellDef mat-header-cell mat-sort-header>Название</th>
+        <td (click)="openEditTaskDialog(task)" *matCellDef="let task" [class.completed]="task.completed"
+            class="col-title pointer" class="col-title"
+            mat-cell
+        >
+          {{task.title}}
+        </td>
+      </ng-container>
+
+      <!--      дата выполнения-->
+      <ng-container matColumnDef="date">
+        <th *matHeaderCellDef mat-header-cell mat-sort-header>Срок</th>
+        <td *matCellDef="let task" [ngClass]="{'completed': task.completed, 'novalue': task.date ==null} "
+            class="col-date" mat-cell>
+          {{task.date ? (task.date | date: "medium") : 'Без даты'}}
+        </td>
+      </ng-container>
+
+      <!--      приоритет-->
+      <ng-container matColumnDef="priority">
+        <th *matHeaderCellDef mat-header-cell>Приоритет</th>
+        <td *matCellDef="let task" [ngClass]="{'completed': task.completed, 'novalue': task.priority ==null}"
+            class="col-priority" mat-cell>
+          {{task.priority ? task.priority.title : "Без приоритета"}}
+        </td>
+      </ng-container>
+
+      <!--      категория-->
+      <ng-container matColumnDef="category">
+        <th *matHeaderCellDef mat-header-cell mat-sort-header>Категория</th>
+        <td *matCellDef="let task" [ngClass]="{'completed': task.completed, 'novalue': task.category ==null}"
+            class="col-category" mat-cell>
+          {{task.category ? task.category.title : "Без категории"}}
+        </td>
+      </ng-container>
+
+      <!--      заголовок таблицы-->
+      <tr *matHeaderRowDef="displayedColumns;" mat-header-row></tr>
+
+      <!--      строки таблицы из тегов td-->
+      <tr *matRowDef="let row; columns: displayedColumns;" mat-row></tr>
     </table>
+    <mat-paginator [pageSizeOptions]="[10,20,50,100]" showFirstLastButtons></mat-paginator>
   </div>
+
+  <div *ngIf="tasks && tasks.length == 0"><p class="not-found">Ничего не найдено</p></div>
 </div>
