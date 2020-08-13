@@ -7,10 +7,13 @@ import {CategoriesComponent} from './views/categories/categories.component';
 import {TasksComponent} from './views/tasks/tasks.component';
 import {
   MatButtonModule,
+  MatCheckboxModule,
+  MatDatepickerModule,
   MatDialogModule,
   MatFormFieldModule,
   MatIconModule,
   MatInputModule,
+  MatNativeDateModule,
   MatOptionModule,
   MatPaginatorModule,
   MatSelectModule,
@@ -21,6 +24,11 @@ import {
 import {EditTaskDialogComponent} from './dialog/edit-task-dialog/edit-task-dialog.component';
 import {FormsModule} from '@angular/forms';
 import {ConfirmDialogComponent} from './dialog/confirm-dialog/confirm-dialog.component';
+import {TaskDatePipe} from './pipe/task-date.pipe';
+import {registerLocaleData} from '@angular/common';
+import localeRu from '@angular/common/locales/ru';
+
+registerLocaleData(localeRu);
 
 @NgModule({
   declarations: [
@@ -28,7 +36,8 @@ import {ConfirmDialogComponent} from './dialog/confirm-dialog/confirm-dialog.com
     CategoriesComponent,
     TasksComponent,
     EditTaskDialogComponent,
-    ConfirmDialogComponent
+    ConfirmDialogComponent,
+    TaskDatePipe
   ],
   imports: [
     BrowserModule,
@@ -44,11 +53,15 @@ import {ConfirmDialogComponent} from './dialog/confirm-dialog/confirm-dialog.com
     MatButtonModule,
     MatIconModule,
     MatOptionModule,
-    MatSelectModule
+    MatSelectModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
+    MatCheckboxModule
   ],
   providers: [],
   entryComponents: [
-    EditTaskDialogComponent
+    EditTaskDialogComponent,
+    ConfirmDialogComponent
   ],
   bootstrap: [AppComponent]
 })

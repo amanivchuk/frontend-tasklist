@@ -50,4 +50,17 @@ export class AppComponent implements OnInit {
       });
     });
   }
+
+  onDeleteTask(task: Task) {
+    this.dataHadler.deleteTask(task.id).subscribe(() => {
+      this.dataHadler.searchTasks(
+        this.selectedCategory,
+        null,
+        null,
+        null,
+      ).subscribe(tasks => {
+        this.tasks = tasks;
+      });
+    });
+  }
 }

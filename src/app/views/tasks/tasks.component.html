@@ -35,7 +35,7 @@
         <th *matHeaderCellDef mat-header-cell mat-sort-header>Срок</th>
         <td *matCellDef="let task" [ngClass]="{'completed': task.completed, 'novalue': task.date ==null} "
             class="col-date" mat-cell>
-          {{task.date ? (task.date | date: "medium") : 'Без даты'}}
+          {{task.date | taskDate}}
         </td>
       </ng-container>
 
@@ -54,6 +54,36 @@
         <td *matCellDef="let task" [ngClass]="{'completed': task.completed, 'novalue': task.category ==null}"
             class="col-category" mat-cell>
           {{task.category ? task.category.title : "Без категории"}}
+        </td>
+      </ng-container>
+
+      <!--доступные действия над задачей-->
+      <ng-container matColumnDef="operations">
+        <th *matHeaderCellDef mat-header-cell></th>
+        <td *matCellDef="let task" [class.completed]="task.completed" class="col-operations"
+            mat-cell>
+          <button (click)="openDeleteDialog(task)" class="delete-icon"
+                  mat-icon-button>
+            <mat-icon aria-hidden="false">delete</mat-icon>
+          </button>
+
+          <button (click)="openEditTaskDialog(task)" class="edit-icon"
+                  mat-icon-button>
+            <mat-icon aria-hidden="false">edit</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+
+      <!--галочка для выполнения-->
+      <ng-container matColumnDef="select">
+        <th *matHeaderCellDef mat-header-cell></th>
+        <td *matCellDef="let task" class="col-select text-right" mat-cell>
+          <mat-checkbox
+            (change)="$event ? onToggleStatus(task) : null"
+            (click)="$event.stopPropagation()"
+            [checked]="task.completed">
+
+          </mat-checkbox>
         </td>
       </ng-container>
 
