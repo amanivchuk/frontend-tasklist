@@ -4,6 +4,9 @@ import {DataHandlerService} from '../../service/data-handler.service';
 import {MatDialog, MatPaginator, MatSort, MatTableDataSource} from '@angular/material';
 import {EditTaskDialogComponent} from '../../dialog/edit-task-dialog/edit-task-dialog.component';
 import {ConfirmDialogComponent} from '../../dialog/confirm-dialog/confirm-dialog.component';
+import {Category} from '../../model/Category';
+import {Priority} from '../../model/Priority';
+import {OperType} from '../../dialog/OperType';
 
 @Component({
   selector: 'app-tasks',
@@ -18,6 +21,9 @@ export class TasksComponent implements OnInit {
   @Output()
   deleteTask = new EventEmitter<Task>();
 
+  @Output()
+  selectCategory = new EventEmitter<Category>();
+
 
   private displayedColumns: string[] = ['color', 'id', 'title', 'date', 'priority', 'category', 'operations', 'select'];
   private dataSource: MatTableDataSource<Task>;
@@ -25,6 +31,23 @@ export class TasksComponent implements OnInit {
   @ViewChild(MatPaginator, {static: false}) private paginator: MatPaginator;
   @ViewChild(MatSort, {static: false}) private sort: MatSort;
   private tasks: Task[];
+  @Output()
+  filterByTitle = new EventEmitter<string>();
+  private searchTaskText: string;
+  private selectedStatusFilter: boolean;
+  @Output()
+  private filterByStatus = new EventEmitter<boolean>();
+  private priorities: Priority[];
+  private selectedPriorityFilter: Priority;
+
+  @Output()
+  private filterByPriority = new EventEmitter<Priority>();
+
+  @Output()
+  private addTask = new EventEmitter<Task>();
+
+  @Input()
+  private selectedCategory: Category;
 
   constructor(
     private dataHandler: DataHandlerService,
@@ -38,9 +61,15 @@ export class TasksComponent implements OnInit {
     this.fillTable();
   }
 
+  @Input('priorities')
+  set setPriorities(priorities: Priority[]) {
+    this.priorities = priorities;
+  }
+
   ngOnInit() {
     this.dataSource = new MatTableDataSource();
     this.fillTable();
+    // this.onSelectCategory(null);
   }
 
   toggleTaskCompleted(task: Task) {
@@ -52,7 +81,10 @@ export class TasksComponent implements OnInit {
 
     //открытие диалогового окна
     const dialogRef = this.dialog.open(EditTaskDialogComponent,
-      {data: [task, 'Редактирование задачи'], autoFocus: false});
+      {
+        data: [task, 'Редактирование задачи', OperType.EDIT],
+        autoFocus: false
+      });
 
     dialogRef.afterClosed().subscribe(result => {
       //обработка результатов
@@ -148,5 +180,43 @@ export class TasksComponent implements OnInit {
   onToggleStatus(task: Task) {
     task.completed = !task.completed;
     this.updateTask.emit(task);
+  }
+
+  private onSelectCategory(category: Category) {
+    this.selectCategory.emit(category);
+  }
+
+  //фильтрация по названию
+  private onFilterByTitle() {
+    this.filterByTitle.emit(this.searchTaskText);
+  }
+
+  private onFilterByStatus(value: boolean) {
+    if (value != this.selectedStatusFilter) {
+      this.selectedStatusFilter = value;
+      this.filterByStatus.emit(this.selectedStatusFilter);
+    }
+  }
+
+  private onFilterByPriority(value: Priority) {
+    if (value !== this.selectedPriorityFilter) {
+      this.selectedPriorityFilter = value;
+      this.filterByPriority.emit(this.selectedPriorityFilter);
+    }
+  }
+
+  //диалоговое окно для добовление задачи
+  private openAddTaskDialog() {
+    const task = new Task(null, '', false, null, this.selectedCategory);
+
+    const dialogRef = this.dialog.open(EditTaskDialogComponent, {
+      data: [task, 'Добавление задачи', OperType.ADD]
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.addTask.emit(task);
+      }
+    });
   }
 }

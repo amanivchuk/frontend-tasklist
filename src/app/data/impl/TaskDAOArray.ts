@@ -8,8 +8,14 @@ import {TestData} from '../TestData';
 
 export class TaskDAOArray implements TaskDAO {
 
-  add(T): Observable<Task> {
-    return undefined;
+  add(task: Task): Observable<Task> {
+    if (task.id === null || task.id === 0) {
+      task.id = this.getLastIdTask();
+    }
+
+    TestData.tasks.push(task);
+
+    return of(task);
   }
 
   delete(id: number): Observable<Task> {
@@ -27,19 +33,20 @@ export class TaskDAOArray implements TaskDAO {
   }
 
   getCompletedCountInCategory(category: Category): Observable<number> {
-    return undefined;
+    return of(this.searchTodos(category, null, true, null).length);
   }
 
   getTotalCount(): Observable<number> {
-    return undefined;
+    return of(TestData.tasks.length);
   }
 
   getTotalCountInCategory(category: Category): Observable<number> {
-    return undefined;
+    return of(this.searchTodos(category, null, null, null).length);
   }
 
   getUncompletedCountInCategory(category: Category): Observable<number> {
-    return undefined;
+    return of(this.searchTodos(category, null, false, null).length);
+
   }
 
   search(category: Category, searchText: string, status: boolean, priority: Priority): Observable<Task[]> {
@@ -61,6 +68,25 @@ export class TaskDAOArray implements TaskDAO {
       allTasks = allTasks.filter(todo => todo.category === category);
     }
 
+    if (status != null) {
+      allTasks = allTasks.filter(task => task.completed === status);
+    }
+
+    if (priority != null) {
+      allTasks = allTasks.filter(task => task.priority === priority);
+    }
+
+    if (searchText != null) {
+      allTasks = allTasks.filter(task =>
+        task.title.toUpperCase().includes(searchText.toUpperCase())
+      );
+    }
+    console.log(allTasks);
+
     return allTasks; //отфильтрованный массив
+  }
+
+  private getLastIdTask(): number {
+    return Math.max.apply(Math, TestData.tasks.map(task => task.id)) + 1;
   }
 }
