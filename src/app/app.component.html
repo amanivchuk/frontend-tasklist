@@ -5,6 +5,9 @@
     (searchCategory)="onSearchCategory($event)"
     (selectCategory)="onSelectCategory($event)"
     (updateCategory)="onUpdateCategory($event)"
+    [categoryMap]="categoryMap"
+    [uncompletedTotal]="uncompletedTotalTasksCount"
+
     [categories]="categories"
     [selectedCategory]="selectedCategory"
   ></app-categories>

@@ -61,3 +61,13 @@ span.add-icon-area {
   margin-left: 10px;
   font-size: 25px
 }
+
+.uncompleted-count {
+  background-color: #eaeaea;
+  border-radius: 3px;
+  padding: 5px;
+  color: black;
+  width: 15%;
+  display: inline-block;
+  text-align: center;
+}
