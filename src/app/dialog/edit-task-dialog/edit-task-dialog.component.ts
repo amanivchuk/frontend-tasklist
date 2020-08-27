@@ -1,6 +1,5 @@
 import {Component, Inject, OnInit} from '@angular/core';
 import {MAT_DIALOG_DATA, MatDialog, MatDialogRef} from '@angular/material';
-import {DataHandlerService} from '../../service/data-handler.service';
 import {Task} from '../../model/Task';
 import {Category} from '../../model/Category';
 import {Priority} from '../../model/Priority';
@@ -27,7 +26,6 @@ export class EditTaskDialogComponent implements OnInit {
   constructor(
     private dialogRef: MatDialogRef<EditTaskDialogComponent>,//для возможности работы с текущим диалоговым оконом
     @Inject(MAT_DIALOG_DATA) private data: [Task, string, OperType], //данные которые прередали в диалоговое окно
-    private dataHandler: DataHandlerService, //ссылка на сервис для работы с данными
     private dialog: MatDialog, //для открытия нового диалогового окна (из текущего), например для подтверждения удаления
   ) {
   }
@@ -42,8 +40,8 @@ export class EditTaskDialogComponent implements OnInit {
     this.tmpPriority = this.task.priority;
     this.tmpDate = this.task.date;
 
-    this.dataHandler.getAllCategories().subscribe(categories => this.categories = categories);
-    this.dataHandler.getAllPriorities().subscribe(priorities => this.priorities = priorities);
+    // this.dataHandler.getAllCategories().subscribe(categories => this.categories = categories);
+    // this.dataHandler.getAllPriorities().subscribe(priorities => this.priorities = priorities);
   }
 
   delete() {

@@ -37,6 +37,11 @@ import {ColorPickerModule} from 'ngx-color-picker';
 import {SettingsDialogComponent} from './dialog/settings-dialog/settings-dialog.component';
 import {PrioritiesComponent} from './views/priorities/priorities.component';
 import {EditPriorityComponent} from './dialog/edit-priority/edit-priority.component';
+import {HttpClientModule} from '@angular/common/http';
+import {TASK_URL_TOKEN} from './data/impl/TaskService';
+import {CATEGORY_URL_TOKEN} from './data/impl/CategoryService';
+import {PRIORITY_URL_TOKEN} from './data/impl/PriorityService';
+import {STAT_URL_TOKEN} from './data/impl/StatService';
 
 registerLocaleData(localeRu);
 
@@ -76,9 +81,27 @@ registerLocaleData(localeRu);
     MatDatepickerModule,
     MatNativeDateModule,
     MatCheckboxModule,
-    ColorPickerModule
+    ColorPickerModule,
+    HttpClientModule
   ],
-  providers: [],
+  providers: [
+    {
+      provide: TASK_URL_TOKEN,
+      useValue: 'http://localhost:9200/task'
+    },
+    {
+      provide: CATEGORY_URL_TOKEN,
+      useValue: 'http://localhost:9200/category'
+    },
+    {
+      provide: PRIORITY_URL_TOKEN,
+      useValue: 'http://localhost:9200/priority'
+    },
+    {
+      provide: STAT_URL_TOKEN,
+      useValue: 'http://localhost:9200/stat'
+    }
+  ],
   entryComponents: [
     EditTaskDialogComponent,
     ConfirmDialogComponent,

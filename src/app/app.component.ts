@@ -1,10 +1,12 @@
 import {Component, OnInit} from '@angular/core';
 import {Task} from './model/Task';
-import {DataHandlerService} from './service/data-handler.service';
 import {Category} from './model/Category';
 import {Priority} from './model/Priority';
-import {zip} from 'rxjs';
-import {concatMap, map} from 'rxjs/operators';
+import {Observable} from 'rxjs';
+import {CategoryService} from './data/impl/CategoryService';
+import {CategorySearchValues, TaskSearchValues} from './data/search/SearchObjects';
+import {TaskService} from './data/impl/TaskService';
+import {PageEvent} from '@angular/material';
 
 @Component({
   selector: 'app-root',
@@ -13,239 +15,145 @@ import {concatMap, map} from 'rxjs/operators';
 })
 export class AppComponent implements OnInit {
 
-  // коллекция категорий с кол-вом незавершенных задач для каждой из них
-  private categoryMap = new Map<Category, number>();
+  readonly defaultPageSize = 5;
 
   private tasks: Task[];
   private categories: Category[]; // все категории
   private priorities: Priority[]; // все приоритеты
-
-  // статистика
-  private totalTasksCountInCategory: number;
-  private completedCountInCategory: number;
-  private uncompletedCountInCategory: number;
-  private uncompletedTotalTasksCount: number;
-
-  // показать/скрыть статистику
-  private showStat = true;
-
+  readonly defaultPageNumber = 0;
+  // параметры поисков
+  categorySearchValues = new CategorySearchValues();
+  taskSearchValues = new TaskSearchValues();
   // выбранная категория
   private selectedCategory: Category = null;
 
-  // поиск
-  private searchTaskText = ''; // текущее значение для поиска задач
-  private searchCategoryText = ''; // текущее значение для поиска категорий
-
-
-  // фильтрация
-  private priorityFilter: Priority;
-  private statusFilter: boolean;
-
+  // показать/скрыть статистику
+  private showStat = true;
+  // статистика для категории ВСЕ
+  private uncompletedCountForCategoryAll: number;
+  private totalTasksFounded: number; //сколько всего задач найдено
 
   constructor(
-    private dataHandler: DataHandlerService, // фасад для работы с данными
+    private categoryService: CategoryService,
+    private taskService: TaskService
   ) {
   }
 
   ngOnInit() {
-    this.dataHandler.getAllPriorities().subscribe(priorities => this.priorities = priorities);
-    this.dataHandler.getAllCategories().subscribe(categories => this.categories = categories);
-
     // заполнить меню с категориями
-    this.fillCategories();
+    this.fillAllCategories().subscribe(res => {
+      this.categories = res;
 
-    this.onSelectCategory(null); // показать все задачи
-
+      //первоночальное отображение задач при загрузке приложения
+      //запускаем только после выполнения статистики (т.к. понвдобятся ее данные) и загруженные категорий
+      this.onSelectCategory(this.selectedCategory);
+    });
   }
-
-
-  // добавление категории
-  private onAddCategory(title: string): void {
-    this.dataHandler.addCategory(title).subscribe(() => this.fillCategories());
-  }
-
-  // private fillCategories(): void {
-  //     this.dataHandler.getAllCategories().subscribe(categories => this.categories = categories);
-  // }
 
   // заполняет категории и кол-во невыполненных задач по каждой из них (нужно для отображения категорий)
-  private fillCategories() {
+  fillAllCategories(): Observable<Category[]> {
+    return this.categoryService.findAll();
+  }
 
-    if (this.categoryMap) {
-      this.categoryMap.clear();
+  //изменили кол-во элементов на странице или перешли на другую страницу
+  paging(pageEvent: PageEvent) {
+    //если изменили кол-во нв странице - заново делаем щапрос и показываем с 1й страницы
+    if (this.taskSearchValues.pageSize !== pageEvent.pageSize) {
+      this.taskSearchValues.pageNumber = 0;//новые данные будем показывать с 1й страницы (индекс 0)
+    } else {
+      //если просто перешли на другую страницу
+      this.taskSearchValues.pageNumber = pageEvent.pageIndex;
     }
 
-    this.categories = this.categories.sort((a, b) => a.title.localeCompare(b.title));
+    this.taskSearchValues.pageSize = pageEvent.pageSize;
+    this.taskSearchValues.pageNumber = pageEvent.pageIndex;
 
-    // для каждой категории посчитать кол-во невыполненных задач
-
-    this.categories.forEach(cat => {
-      this.dataHandler.getUncompletedCountInCategory(cat).subscribe(count => this.categoryMap.set(cat, count));
-    });
-
+    this.onSearchTasks(this.taskSearchValues); // показываем новые данные
   }
 
-  // поиск категории
-  private onSearchCategory(title: string): void {
-
-    this.searchCategoryText = title;
-
-    this.dataHandler.searchCategories(title).subscribe(categories => {
-      this.categories = categories;
-      this.fillCategories();
-    });
-  }
-
-
-  // изменение категории
+  // выбрали/ изменение категории
   private onSelectCategory(category: Category): void {
 
-    this.selectedCategory = category;
+    // сбрасываем, чтобы показывать результат с первой страницы
+    this.taskSearchValues.pageNumber = 0;
 
-    this.updateTasksAndStat();
+    this.selectedCategory = category; //запоминаем выбранную категорию
+
+    // для поиска задач по данной категории
+    this.taskSearchValues.categoryId = category ? category.id : null;
+
+    //  обновить список задач согласно выбранной категории и другим параметрам поиска из taskSearchValues
+    this.onSearchTasks(this.taskSearchValues);
 
   }
 
-  // // удаление категории
-  // private onDeleteCategory(category: Category): void {
-  //     this.dataHandler.deleteCategory(category.id).subscribe(cat => {
-  //         this.selectedCategory = null; // открываем категорию "Все"
-  //         this.onSelectCategory(null);
-  //     });
-  // }
+  // добавление категории
+  private onAddCategory(category: Category): void {
+    this.categoryService.add(category).subscribe(result => {
+      this.onSearchCategory(this.categorySearchValues);
+    });
+  }
 
   // удаление категории
   private onDeleteCategory(category: Category) {
-    this.dataHandler.deleteCategory(category.id).subscribe(cat => {
-      this.selectedCategory = null; // открываем категорию "Все"
-      this.categoryMap.delete(cat); // не забыть удалить категорию из карты
-      this.onSearchCategory(this.searchCategoryText);
-      this.updateTasks();
+    this.categoryService.delete(category.id).subscribe(cat => {
+      this.onSearchCategory(this.categorySearchValues);
+      this.onSelectCategory(this.selectedCategory);
     });
   }
 
   // обновлении категории
   private onUpdateCategory(category: Category): void {
-    this.dataHandler.updateCategory(category).subscribe(() => {
-      this.onSearchCategory(this.searchCategoryText);
+    this.categoryService.update(category).subscribe(() => {
+      this.onSearchCategory(this.categorySearchValues); //обновляем список категорий
+      this.onSearchTasks(this.taskSearchValues); //обновляем список задач
     });
+  }
+
+  // поиск категории
+  private onSearchCategory(categorySearchValues: CategorySearchValues): void {
+    this.categoryService.findCategories(categorySearchValues).subscribe(result => {
+      this.categories = result;
+    });
+  }
+
+  // поиск задач
+  private onSearchTasks(searchTaskValues: TaskSearchValues): void {
+    this.taskSearchValues = searchTaskValues;
+
+    this.taskService.findTasks(this.taskSearchValues).subscribe(result => {
+      this.totalTasksFounded = result.totalElements;// сколько данных показывать на странице
+      this.tasks = result.content; //массив задач
+    });
+
+  }
+
+  // добавление задачи
+  private onAddTask(task: Task) {
+
   }
 
   // обновление задачи
   private onUpdateTask(task: Task): void {
 
-    this.dataHandler.updateTask(task).subscribe(() => {
-
-      this.fillCategories();
-
-      this.updateTasksAndStat();
-    });
-
   }
-
-  // // удаление задачи
-  // private onDeleteTask(task: Task): void {
-  //
-  //     this.dataHandler.deleteTask(task.id).subscribe(cat => {
-  //         this.updateTasksAndStat();
-  //     });
-  // }
 
   // удаление задачи
   private onDeleteTask(task: Task) {
 
-    this.dataHandler.deleteTask(task.id).pipe(
-      concatMap(task => {
-          return this.dataHandler.getUncompletedCountInCategory(task.category).pipe(map(count => {
-            return ({t: task, count});
-          }));
-        }
-      )).subscribe(result => {
-
-      const t = result.t as Task;
-
-      // если указана категория - обновляем счетчик для соотв. категории
-      // чтобы не обновлять весь список - обновим точечно
-      if (t.category) {
-        this.categoryMap.set(t.category, result.count);
-      }
-
-      this.updateTasksAndStat();
-
-    });
-
-
-  }
-
-
-  // поиск задач
-  private onSearchTasks(searchString: string): void {
-    this.searchTaskText = searchString;
-    this.updateTasks();
   }
 
   // фильтрация задач по статусу (все, решенные, нерешенные)
   private onFilterTasksByStatus(status: boolean): void {
-    this.statusFilter = status;
+    // this.statusFilter = status;
     this.updateTasks();
   }
 
   // фильтрация задач по приоритету
   private onFilterTasksByPriority(priority: Priority): void {
-    this.priorityFilter = priority;
+    // this.priorityFilter = priority;
     this.updateTasks();
   }
-
-  private updateTasks(): void {
-    this.dataHandler.searchTasks(
-      this.selectedCategory,
-      this.searchTaskText,
-      this.statusFilter,
-      this.priorityFilter
-    ).subscribe((tasks: Task[]) => {
-      this.tasks = tasks;
-    });
-  }
-
-
-  // // добавление задачи
-  // private onAddTask(task: Task): void {
-  //
-  //     this.dataHandler.addTask(task).subscribe(result => {
-  //
-  //         this.updateTasksAndStat();
-  //
-  //     });
-  //
-  // }
-
-  // добавление задачи
-  private onAddTask(task: Task) {
-
-
-    this.dataHandler.addTask(task).pipe(// сначала добавляем задачу
-      concatMap(task => { // используем добавленный task (concatMap - для последовательного выполнения)
-          // .. и считаем кол-во задач в категории с учетом добавленной задачи
-          return this.dataHandler.getUncompletedCountInCategory(task.category).pipe(map(count => {
-            return ({t: task, count}); // в итоге получаем массив с добавленной задачей и кол-вом задач для категории
-          }));
-        }
-      )).subscribe(result => {
-
-      const t = result.t as Task;
-
-      // если указана категория - обновляем счетчик для соотв. категории
-      // чтобы не обновлять весь список - обновим точечно
-      if (t.category) {
-        this.categoryMap.set(t.category, result.count);
-      }
-
-      this.updateTasksAndStat();
-
-    });
-
-  }
-
 
   // показывает задачи с применением всех текущий условий (категория, поиск, фильтры и пр.)
   private updateTasksAndStat(): void {
@@ -257,20 +165,15 @@ export class AppComponent implements OnInit {
 
   }
 
-  // обновить статистику
-  private updateStat(): void {
-    zip(
-      this.dataHandler.getTotalCountInCategory(this.selectedCategory),
-      this.dataHandler.getCompletedCountInCategory(this.selectedCategory),
-      this.dataHandler.getUncompletedCountInCategory(this.selectedCategory),
-      this.dataHandler.getUncompletedTotalCount())
-
-      .subscribe(array => {
-        this.totalTasksCountInCategory = array[0];
-        this.completedCountInCategory = array[1];
-        this.uncompletedCountInCategory = array[2];
-        this.uncompletedTotalTasksCount = array[3]; // нужно для категории Все
-      });
+  private updateTasks(): void {
+    // this.dataHandler.searchTasks(
+    //   this.selectedCategory,
+    //   this.searchTaskText,
+    //   this.statusFilter,
+    //   this.priorityFilter
+    // ).subscribe((tasks: Task[]) => {
+    //   this.tasks = tasks;
+    // });
   }
 
   // показать-скрыть статистику
@@ -278,6 +181,19 @@ export class AppComponent implements OnInit {
     this.showStat = showStat;
   }
 
-
-
+  // обновить статистику
+  private updateStat(): void {
+    // zip(
+    //   this.dataHandler.getTotalCountInCategory(this.selectedCategory),
+    //   this.dataHandler.getCompletedCountInCategory(this.selectedCategory),
+    //   this.dataHandler.getUncompletedCountInCategory(this.selectedCategory),
+    //   this.dataHandler.getUncompletedTotalCount())
+    //
+    //   .subscribe(array => {
+    //     this.totalTasksCountInCategory = array[0];
+    //     this.completedCountInCategory = array[1];
+    //     this.uncompletedCountInCategory = array[2];
+    //     this.uncompletedTotalTasksCount = array[3]; // нужно для категории Все
+    //   });
+  }
 }

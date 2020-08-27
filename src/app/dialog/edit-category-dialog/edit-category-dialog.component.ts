@@ -1,7 +1,8 @@
 import {Component, Inject, OnInit} from '@angular/core';
 import {MAT_DIALOG_DATA, MatDialog, MatDialogRef} from '@angular/material';
 import {ConfirmDialogComponent} from '../confirm-dialog/confirm-dialog.component';
-import {OperType} from '../OperType';
+import {Category} from '../../model/Category';
+import {DialogAction, DialogResult} from '../../object/DialogResult';
 
 @Component({
   selector: 'app-edit-category-dialog',
@@ -11,39 +12,37 @@ import {OperType} from '../OperType';
 export class EditCategoryDialogComponent implements OnInit {
 
   private dialogTitle: string; //текст диалогового окна
-  private categoryTitle: string;//текст названия категории
-  // private canDelete = true;
-  private operType: OperType;
+  private category: Category;// категория
+  private canDelete = true;
 
   constructor(
     private dialogRef: MatDialogRef<EditCategoryDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) private data: [string, string, OperType],
+    @Inject(MAT_DIALOG_DATA) private data: [Category, string],
     private dialog: MatDialog
   ) {
   }
 
   ngOnInit() {
     //получаем переданные в диалоговое окно данные
-    this.categoryTitle = this.data[0];
+    this.category = this.data[0];
     this.dialogTitle = this.data[1];
-    this.operType = this.data[2]; //тип операции
 
-    //если было передано значение, значит это редактированиеЮ пожтому делаем удаление возможным
-    // if(!this.categoryTitle){
-    //   this.canDelete = false;
-    // }
+    // если было передано значение, значит это редактированиеЮ пожтому делаем удаление возможным
+    if (this.category && this.category.id && this.category.id > 0) {
+      this.canDelete = true;
+    }
   }
 
   //нажали ок
-  private onConfirm() {
-    this.dialogRef.close(this.categoryTitle);
+  onConfirm(): void {
+    this.dialogRef.close(new DialogResult(DialogAction.SAVE, this.category));
   }
 
-  private onCancel() {
-    this.dialogRef.close(false);
+  onCancel(): void {
+    this.dialogRef.close(new DialogResult(DialogAction.CANCEL));
   }
 
-  private delete() {
+  delete(): void {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       maxWidth: '500px',
       data: {
@@ -54,14 +53,14 @@ export class EditCategoryDialogComponent implements OnInit {
     });
 
     dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.dialogRef.close('delete');//нажали удалить
+      if (!(result)) {
+        return;
+      }
+
+      if (result.action === DialogAction.OK) {
+        this.dialogRef.close(new DialogResult(DialogAction.DELETE));//нажали удалить
       }
     });
-  }
-
-  private canDelete(): boolean {
-    return this.operType === OperType.EDIT;
   }
 
 }

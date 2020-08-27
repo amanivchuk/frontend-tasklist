@@ -1,12 +1,12 @@
 import {Component, EventEmitter, Input, OnInit, Output, ViewChild} from '@angular/core';
 import {Task} from '../../model/Task';
-import {DataHandlerService} from '../../service/data-handler.service';
-import {MatDialog, MatPaginator, MatSort, MatTableDataSource} from '@angular/material';
+import {MatDialog, MatPaginator, MatSort, MatTableDataSource, PageEvent} from '@angular/material';
 import {EditTaskDialogComponent} from '../../dialog/edit-task-dialog/edit-task-dialog.component';
 import {ConfirmDialogComponent} from '../../dialog/confirm-dialog/confirm-dialog.component';
 import {Category} from '../../model/Category';
 import {Priority} from '../../model/Priority';
 import {OperType} from '../../dialog/OperType';
+import {TaskSearchValues} from '../../data/search/SearchObjects';
 
 @Component({
   selector: 'app-tasks',
@@ -15,45 +15,65 @@ import {OperType} from '../../dialog/OperType';
 })
 export class TasksComponent implements OnInit {
 
-  @Output()
-  updateTask = new EventEmitter<Task>();
-
+  @Input()
+  totalTasksFounded: number; //сколько всего задач найдено
   @Output()
   deleteTask = new EventEmitter<Task>();
-
   @Output()
-  selectCategory = new EventEmitter<Category>();
+  selectCategory = new EventEmitter<Category>();// нажали на категорию из списка задач
+  @Output()
+  paging = new EventEmitter<PageEvent>(); // переход по страницам данных
+  @Output()
+  searchAction = new EventEmitter<TaskSearchValues>(); //переход по страницам данных
 
-
-  private displayedColumns: string[] = ['color', 'id', 'title', 'date', 'priority', 'category', 'operations', 'select'];
-  private dataSource: MatTableDataSource<Task>;
-  //ссылки на компоненты таблицы
-  @ViewChild(MatPaginator, {static: false}) private paginator: MatPaginator;
-  @ViewChild(MatSort, {static: false}) private sort: MatSort;
-  private tasks: Task[];
+  // ----------------------- исходящие действия----------------------------
   @Output()
   filterByTitle = new EventEmitter<string>();
-  private searchTaskText: string;
-  private selectedStatusFilter: boolean;
-  @Output()
-  private filterByStatus = new EventEmitter<boolean>();
-  private priorities: Priority[];
-  private selectedPriorityFilter: Priority;
+  //параметры поиска задач - первоначально данные загружаются из cookies (в app.component)
+  taskSearchValues: TaskSearchValues;
 
   @Output()
-  private filterByPriority = new EventEmitter<Priority>();
-
-  @Output()
-  private addTask = new EventEmitter<Task>();
-
+  updateTask = new EventEmitter<Task>();
   @Input()
   private selectedCategory: Category;
+  @Output()
+  private addTask = new EventEmitter<Task>();
+  @Output()
+  private filterByStatus = new EventEmitter<boolean>();
+  @Output()
+  private filterByPriority = new EventEmitter<Priority>();
+  private tasks: Task[];
 
   constructor(
-    private dataHandler: DataHandlerService,
     private dialog: MatDialog //работа с диалоговым окном
   ) {
   }
+
+  // -------------------------------------------------------------------------
+
+  // все возможные параметры для поиска задач
+  @Input('taskSearchValues')
+  set setTaskSearchValues(taskSearchValues: TaskSearchValues) {
+    this.taskSearchValues = taskSearchValues;
+  }
+
+  private displayedColumns: string[] = ['color', 'id', 'title', 'date', 'priority', 'category', 'operations', 'select'];
+  private dataSource: MatTableDataSource<Task>;
+
+  //ссылки на компоненты таблицы
+  @ViewChild(MatPaginator, {static: false}) private paginator: MatPaginator;
+  @ViewChild(MatSort, {static: false}) private sort: MatSort;
+
+  @Input('priorities')
+  set setPriorities(priorities: Priority[]) {
+    this.priorities = priorities;
+  }
+
+  private searchTaskText: string;
+  private selectedStatusFilter: boolean;
+
+  private priorities: Priority[];
+  private selectedPriorityFilter: Priority;
 
   @Input('tasks')
   private set setTasks(tasks: Task[]) {
@@ -61,15 +81,8 @@ export class TasksComponent implements OnInit {
     this.fillTable();
   }
 
-  @Input('priorities')
-  set setPriorities(priorities: Priority[]) {
-    this.priorities = priorities;
-  }
-
   ngOnInit() {
     this.dataSource = new MatTableDataSource();
-    this.fillTable();
-    // this.onSelectCategory(null);
   }
 
   toggleTaskCompleted(task: Task) {
@@ -132,29 +145,7 @@ export class TasksComponent implements OnInit {
     if (!this.dataSource) {
       return;
     }
-
     this.dataSource.data = this.tasks;
-
-    this.addTableObjects();
-
-    // @ts-ignore
-    this.dataSource.sortingDataAccessor = (task, colName) => {
-      switch (colName) {
-        case 'priority' : {
-          return task.priority ? task.priority.id : null;
-        }
-        case 'category' : {
-          return task.category ? task.category.id : null;
-        }
-        case 'date' : {
-          return task.date ? task.date : null;
-        }
-        case 'title' : {
-          return task.title;
-        }
-
-      }
-    };
   }
 
   private addTableObjects() {
@@ -218,5 +209,10 @@ export class TasksComponent implements OnInit {
         this.addTask.emit(task);
       }
     });
+  }
+
+  //в это событие попадает как переход на другую страницу (pageIndex),  так и изменение кол-ва данных на странице
+  pageChanged(pageEvent: PageEvent) {
+    this.paging.emit(pageEvent);
   }
 }

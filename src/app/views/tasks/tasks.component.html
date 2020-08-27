@@ -87,17 +87,23 @@
 
   <div class="col-md-12 task-list">
 
+    <!--    список задач -->
     <div class="card">
       <div class="card-header card-header-warning">
         <h4 class="card-title">Список задач</h4>
       </div>
-      <div *ngIf="tasks.length > 0" class="card-body table-responsive">
+      <div *ngIf="tasks && tasks.length > 0" class="card-body table-responsive">
 
-        <table [dataSource]="dataSource" mat-table matSort>
+        <table [dataSource]="dataSource" data-intro="Список всех задач с возможностью редактирования"
+               data-position='bottom' data-step="2"
+               mat-table
+               matSort>
+
           <!--      цвет приоритета-->
           <ng-container matColumnDef="color">
             <th *matHeaderCellDef mat-header-cell></th>
-            <td *matCellDef="let task" [style.background-color]="getPriorityColor(task)" class="col-color"
+            <td *matCellDef="let task" [style.background-color]="getPriorityColor(task)"
+                class="col-color"
                 mat-cell></td>
           </ng-container>
 
@@ -105,14 +111,17 @@
           <ng-container matColumnDef="id">
             <th *matHeaderCellDef mat-header-cell></th>
             <td *matCellDef="let index = index;" class="col-id" mat-cell>
-              {{index + 1}}
+              <!-- для сквозной нумерации -->
+              {{index + 1 + taskSearchValues.pageNumber * taskSearchValues.pageSize}}
+
             </td>
           </ng-container>
 
           <!--      название задачи-->
           <ng-container matColumnDef="title">
             <th *matHeaderCellDef mat-header-cell mat-sort-header>Название</th>
-            <td (click)="openEditTaskDialog(task)" *matCellDef="let task" [class.completed]="task.completed"
+            <td (click)="openEditTaskDialog(task)" *matCellDef="let task"
+                [class.completed]="task.completed"
                 class="col-title pointer" class="col-title"
                 mat-cell
             >
@@ -186,7 +195,10 @@
           <!--      строки таблицы из тегов td-->
           <tr *matRowDef="let row; columns: displayedColumns;" mat-row></tr>
         </table>
-        <mat-paginator [pageSizeOptions]="[10,20,50,100]" showFirstLastButtons></mat-paginator>
+        <mat-paginator
+          (page)="pageChanged($event)" [length]="totalTasksFounded"
+          [pageIndex]="taskSearchValues.pageNumber" [pageSizeOptions]="[10,20,50,100]"
+          [pageSize]="taskSearchValues.pageSize" showFirstLastButtons></mat-paginator>
       </div>
 
       <div *ngIf="tasks && tasks.length == 0"><p class="not-found">Ничего не найдено</p></div>

@@ -6,13 +6,13 @@
     <mat-label>Название (15 символов)</mat-label>
     <input
         #inputTitle
-        (keydown.enter)="onConfirm()" [(ngModel)]="categoryTitle"
+        (keydown.enter)="onConfirm()" [(ngModel)]="category.title"
         matInput
         maxlength="15"
     />
 
-    <button (click)="categoryTitle=''"
-            *ngIf="categoryTitle.trim().length > 0"
+    <button (click)="category.title=''"
+            *ngIf="category.title.trim().length > 0"
             aria-label="Clear" class="clear-icon size25" mat-button mat-icon-button
             matSuffix
     >
@@ -36,7 +36,7 @@
   </div>
 
   <div class="col-12 text-center">
-    <button (click)="delete()" *ngIf="canDelete()" class="red" mat-button>
+    <button (click)="delete()" *ngIf="canDelete" class="red" mat-button>
       Удалить
     </button>
   </div>
