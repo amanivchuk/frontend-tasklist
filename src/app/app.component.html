@@ -39,12 +39,22 @@
           <div class="col-12">
             <app-tasks (addTask)="onAddTask($event)"
 
-                       [selectedCategory]="selectedCategory"
+                       (addTask)="onAddTask($event)"
+                       (deleteTask)="onDeleteTask($event)"
                        (paging)="paging($event)"
-                       [tasks]="tasks"
+                       (searchAction)="onSearchTasks($event)"
+                       [selectedCategory]="selectedCategory"
                        [taskSearchValues]="taskSearchValues"
 
+                       (selectCategory)="onSelectCategory($event)"
+                       (toggleSearch)="toggleSearch($event)"
+                       (updateTask)="onUpdateTask($event)"
+                       [priorities]="priorities"
+
+                       [showSearch]="showSearch"
+                       [tasks]="tasks"
                        [totalTasksFounded]="totalTasksFounded"
+
             >
             </app-tasks>
           </div>

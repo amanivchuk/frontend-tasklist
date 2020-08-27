@@ -7,6 +7,7 @@ import {CategoryService} from './data/impl/CategoryService';
 import {CategorySearchValues, TaskSearchValues} from './data/search/SearchObjects';
 import {TaskService} from './data/impl/TaskService';
 import {PageEvent} from '@angular/material';
+import {PriorityService} from './data/impl/PriorityService';
 
 @Component({
   selector: 'app-root',
@@ -31,11 +32,16 @@ export class AppComponent implements OnInit {
   private showStat = true;
   // статистика для категории ВСЕ
   private uncompletedCountForCategoryAll: number;
-  private totalTasksFounded: number; //сколько всего задач найдено
+  //статус показать-скрыть статистику
+  showSearch: boolean;
+  private totalTasksFounded: number;
+
+  //сколько всего задач найдено
 
   constructor(
     private categoryService: CategoryService,
-    private taskService: TaskService
+    private taskService: TaskService,
+    private priorityService: PriorityService
   ) {
   }
 
@@ -47,6 +53,15 @@ export class AppComponent implements OnInit {
       //первоночальное отображение задач при загрузке приложения
       //запускаем только после выполнения статистики (т.к. понвдобятся ее данные) и загруженные категорий
       this.onSelectCategory(this.selectedCategory);
+    });
+
+    this.fillAllPriorities();
+  }
+
+  //заполняет массив приоритетов
+  fillAllPriorities() {
+    this.priorityService.findAll().subscribe(result => {
+      this.priorities = result;
     });
   }
 
@@ -195,5 +210,10 @@ export class AppComponent implements OnInit {
     //     this.uncompletedCountInCategory = array[2];
     //     this.uncompletedTotalTasksCount = array[3]; // нужно для категории Все
     //   });
+  }
+
+  //показать-скрыть поиск
+  toggleSearch(showSearch: boolean) {
+    this.showSearch = showSearch;
   }
 }
