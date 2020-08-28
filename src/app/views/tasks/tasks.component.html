@@ -117,6 +117,12 @@
 
 <div class="row ">
 
+  <div class="col-md-2 col-sm-12">
+    <button
+      (click)="openAddTaskDialog()"
+      [ngClass]="{'full-width': true}" color="primary" mat-raised-button>Добавить задачу
+    </button>
+  </div>
 
   <div class="col-md-2 col-sm-12 text-left align-middle-align-self-center">
     <span (click)="onToggleSearch()" *ngIf="showSearch" class="link">Скрыть список</span>
@@ -227,7 +233,7 @@
             <th *matHeaderCellDef mat-header-cell></th>
             <td *matCellDef="let task" class="col-select text-right" mat-cell>
               <mat-checkbox
-                (change)="$event ? onToggleStatus(task) : null"
+                (change)="$event ? onToggleCompleted(task) : null"
                 (click)="$event.stopPropagation()"
                 [checked]="task.completed">
 

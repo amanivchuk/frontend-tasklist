@@ -3,8 +3,8 @@
 
     <app-stat-card
       [completed]="true"
-      [count1]="completeTasksInCategory"
-      [countTotal]="totalTasksInCategory"
+      [count1]="getCompletedCount()"
+      [count2]="getTotal()"
       class="col-lg-3 col-md-6 col-sm-6"
       iconName="done"
       title="Завершенные задачи"
@@ -13,8 +13,8 @@
 
     <app-stat-card
       [completed]="true"
-      [count1]="uncompleteTasksInCategory"
-      [countTotal]="totalTasksInCategory"
+      [count1]="getUncompletedCount()"
+      [count2]="getTotal()"
       class="col-lg-3 col-md-6 col-sm-6"
       iconName="thumb_down_alt"
       title="Незавершенные задачи"
@@ -23,7 +23,7 @@
 
     <app-stat-card
       [completed]="true"
-      [count1]="completeTasksInCategory ? (completeTasksInCategory/totalTasksInCategory | percent) : '0 %'"
+      [count1]="getCompletedPercent() | percent"
       class="col-lg-3 col-md-6 col-sm-6"
       iconName="poll"
       title="Процент завершенных задач"
@@ -32,7 +32,7 @@
 
     <app-stat-card
       [completed]="true"
-      [count1]="uncompleteTasksInCategory ? (uncompleteTasksInCategory/totalTasksInCategory | percent) : '0 %'"
+      [count1]="getUncompletedPercent() | percent"
       class="col-lg-3 col-md-6 col-sm-6"
       iconName="thumb_down_alt"
       title="Процент незавершенных задач"

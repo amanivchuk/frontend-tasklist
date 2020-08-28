@@ -15,12 +15,12 @@
   <div class="main-panel">
 
     <nav class="navbar navbar-expand-lg navbar-transparent navbar-absolute fixed-top ">
-
-      <!-- <app-header
-         (toggleStat)="toggleStat($event)"
-         [categoryName]="selectedCategory ? selectedCategory.title: 'Все'"
-         [showStat]="showStat"
-       ></app-header>-->
+      <!--     шапка с меню -->
+      <app-header
+        [categoryName]="selectedCategory ? selectedCategory.title: 'Все'"
+        [showStat]="showStat"
+        (toggleStat)="toggleStat($event)"
+      ></app-header>
 
     </nav>
 
@@ -28,32 +28,29 @@
       <div class="container-fluid">
 
         <!--Статистика-->
-        <!--<app-stat
-          [completeTasksInCategory]="completedCountInCategory"
+        <app-stat
+          [dash]="dash"
           [showStat]="showStat"
-          [totalTasksInCategory]="totalTasksCountInCategory"
-          [uncompleteTasksInCategory]="uncompletedCountInCategory"
-        ></app-stat>-->
+        ></app-stat>
 
         <div class="row">
           <div class="col-12">
-            <app-tasks (addTask)="onAddTask($event)"
+            <app-tasks
+              (addTask)="onAddTask($event)"
+              (deleteTask)="onDeleteTask($event)"
+              (paging)="paging($event)"
+              (searchAction)="onSearchTasks($event)"
+              (selectCategory)="onSelectCategory($event)"
+              (toggleSearch)="toggleSearch($event)"
+              (updateTask)="onUpdateTask($event)"
 
-                       (addTask)="onAddTask($event)"
-                       (deleteTask)="onDeleteTask($event)"
-                       (paging)="paging($event)"
-                       (searchAction)="onSearchTasks($event)"
-                       [selectedCategory]="selectedCategory"
-                       [taskSearchValues]="taskSearchValues"
-
-                       (selectCategory)="onSelectCategory($event)"
-                       (toggleSearch)="toggleSearch($event)"
-                       (updateTask)="onUpdateTask($event)"
-                       [priorities]="priorities"
-
-                       [showSearch]="showSearch"
-                       [tasks]="tasks"
-                       [totalTasksFounded]="totalTasksFounded"
+              [categories]="categories"
+              [selectedCategory]="selectedCategory"
+              [priorities]="priorities"
+              [taskSearchValues]="taskSearchValues"
+              [showSearch]="showSearch"
+              [tasks]="tasks"
+              [totalTasksFounded]="totalTasksFounded"
 
             >
             </app-tasks>
