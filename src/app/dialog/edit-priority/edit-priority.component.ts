@@ -1,7 +1,8 @@
 import {Component, Inject, OnInit} from '@angular/core';
 import {MAT_DIALOG_DATA, MatDialog, MatDialogRef} from '@angular/material';
-import {OperType} from '../OperType';
 import {ConfirmDialogComponent} from '../confirm-dialog/confirm-dialog.component';
+import {Priority} from '../../model/Priority';
+import {DialogAction, DialogResult} from '../../object/DialogResult';
 
 @Component({
   selector: 'app-edit-priority',
@@ -11,30 +12,33 @@ import {ConfirmDialogComponent} from '../confirm-dialog/confirm-dialog.component
 export class EditPriorityComponent implements OnInit {
 
   private dialogTitle: string; //текст для диалогового окна
-  private priorityTitle: string;// текст для названия приоритета
-  private operType: OperType;
+  canDelete = true;
+  private priority: Priority;// названия приоритета
 
   constructor(
     private dialogRef: MatDialogRef<EditPriorityComponent>,
-    @Inject(MAT_DIALOG_DATA) private data: [string, string, OperType],
+    @Inject(MAT_DIALOG_DATA) private data: [Priority, string],
     private dialog: MatDialog
   ) {
   }
 
   ngOnInit() {
-    this.priorityTitle = this.data[0];
+    this.priority = this.data[0];
     this.dialogTitle = this.data[1];
-    this.operType = this.data[2];
+
+    if (!this.priority) {
+      this.canDelete = false;
+    }
   }
 
   //нажали ОК
   private onConfirm() {
-    this.dialogRef.close(this.priorityTitle);
+    this.dialogRef.close(new DialogResult(DialogAction.SAVE, this.priority));
   }
 
   //нажали отмену
   private onCancel() {
-    this.dialogRef.close(false);
+    this.dialogRef.close(new DialogResult(DialogAction.CANCEL));
   }
 
 //  нажали Удалить
@@ -49,13 +53,14 @@ export class EditPriorityComponent implements OnInit {
     });
 
     dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.dialogRef.close('delete');//нажали удалить
+      if (!(result)) {
+        return;
+      }
+
+      if (result.action === DialogAction.OK) {
+        this.dialogRef.close(new DialogResult(DialogAction.DELETE));//нажали удалить
       }
     });
   }
 
-  private canDelete(): boolean {
-    return this.operType == OperType.EDIT;
-  }
 }

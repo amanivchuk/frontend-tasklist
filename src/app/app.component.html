@@ -19,7 +19,10 @@
       <app-header
         [categoryName]="selectedCategory ? selectedCategory.title: 'Все'"
         [showStat]="showStat"
+
         (toggleStat)="toggleStat($event)"
+        (settingsChanged)="settingsChanged()"
+        (toggleMenu)="toggleMenu()"
       ></app-header>
 
     </nav>

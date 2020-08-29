@@ -252,4 +252,10 @@ export class AppComponent implements OnInit {
       this.onSearchTasks(this.taskSearchValues); // обновляем список задач
     });
   }
+
+  //были ли изменены настройки приложения
+  settingsChanged() {
+    this.fillAllPriorities(); //заново загрузить все категории (чтобы их можно было сразу использовать в задачах)
+    this.onSearchTasks(this.taskSearchValues); //обновить текущие задачи и категории для отображения
+  }
 }
