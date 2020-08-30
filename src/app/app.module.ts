@@ -37,11 +37,12 @@ import {ColorPickerModule} from 'ngx-color-picker';
 import {SettingsDialogComponent} from './dialog/settings-dialog/settings-dialog.component';
 import {PrioritiesComponent} from './views/priorities/priorities.component';
 import {EditPriorityComponent} from './dialog/edit-priority/edit-priority.component';
-import {HttpClientModule} from '@angular/common/http';
+import {HTTP_INTERCEPTORS, HttpClientModule} from '@angular/common/http';
 import {TASK_URL_TOKEN} from './data/impl/TaskService';
 import {CATEGORY_URL_TOKEN} from './data/impl/CategoryService';
 import {PRIORITY_URL_TOKEN} from './data/impl/PriorityService';
 import {STAT_URL_TOKEN} from './data/impl/StatService';
+import {CustomHttpInterceptor} from './interceptor/http-interceptor';
 
 registerLocaleData(localeRu);
 
@@ -100,6 +101,11 @@ registerLocaleData(localeRu);
     {
       provide: STAT_URL_TOKEN,
       useValue: 'http://localhost:9200/stat'
+    },
+    {
+      provide: HTTP_INTERCEPTORS, // все HTTP запросы будут выполняться с отображением индиктаро загрузки
+      useClass: CustomHttpInterceptor,
+      multi: true
     }
   ],
   entryComponents: [

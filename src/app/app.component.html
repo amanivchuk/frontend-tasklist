@@ -1,3 +1,5 @@
+<div *ngIf="spinner && spinner.visibility | async" class="spinner"></div>
+
 <div class="wrapper ">
   <app-categories
     (addCategory)="onAddCategory($event)"
